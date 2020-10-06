@@ -4,7 +4,7 @@
   "description": "A web application for finding on-going, or soon-to-start group activities in your local area",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -16,10 +16,12 @@
     "url": "https://github.com/ChicoState/PlayBuddy/issues"
   },
   "homepage": "https://github.com/ChicoState/PlayBuddy#readme",
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.17.1"
+  },
   "devDependencies": {
-    "eslint": "^7.2.0",
+    "eslint": "^7.10.0",
     "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.21.2"
+    "eslint-plugin-import": "^2.22.1"
   }
 }
