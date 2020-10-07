@@ -1,10 +1,11 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import Home from './pages/Home';
 
 const Main = () => (
   <Switch>
     <Route exact path="/">
-      <h1>This is the Main Page</h1>
+      <Home/>
     </Route>
   </Switch>
 );
