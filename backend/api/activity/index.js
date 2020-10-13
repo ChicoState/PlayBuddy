@@ -6,26 +6,14 @@ const activity = express.Router();
  * Returns activity data by id
  * @param {Number} id - The id of the activity, must be only digits
  */
-activity.route('/get/:id([0-9]+)')
+activity.route('/:id([0-9]+)')
   .get((req, res) => {
     const statusCode = 200;
+	const shortened = Boolean(req.query.shortened);
     res.status(statusCode).json({
       id: req.params.id,
       status: statusCode,
-    });
-  });
-  
-/**
- * Returns shortened activity data by id
- * Meant for the activity list, so unnecessary data is not sent over the network
- * @param {Number} id - The id of the activity, must be only digits
- */
-activity.route('/get_short/:id([0-9]+)')
-  .get((req, res) => {
-    const statusCode = 200;
-    res.status(statusCode).json({
-      id: req.params.id,
-      status: statusCode,
+	  shortened,
     });
   });
 
