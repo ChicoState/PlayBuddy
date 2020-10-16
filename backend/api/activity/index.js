@@ -31,8 +31,37 @@ activity.route('/create')
 activity.route('/edit/:id([0-9]+)')
   .post(async(req, res) => {
     const statusCode = 200;
+	const shortened = Boolean(req.query.shortened);
     res.status(statusCode).json({
       id: req.params.id,
+      status: statusCode,
+	  shortened,
+    });
+  });
+
+/**
+ * Edits activity by id
+ * @param {Number} id - The id of the activity, must be only digits
+ */
+activity.route('/edit/:id([0-9]+)')
+  .post((req, res) => {
+    const statusCode = 200;
+    res.status(statusCode).json({
+      id: req.params.id,
+      status: statusCode,
+    });
+  });
+
+/**
+ * Creates a new activity and returns its id
+ * @param {Number} id - The id of the activity, must be only digits
+ */
+activity.route('/create')
+  .post((req, res) => {
+    const statusCode = 200;
+	//res.redirect('/activity/edit/#');
+    res.status(statusCode).json({
+      id: 666,
       status: statusCode,
     });
   });
@@ -58,7 +87,7 @@ activity.route('/search')
 /**
  * Returns activity data by id
  * Note that this route is on bottom to prevent any above routes from matching to this by only having letters a-f
- * @param {Number} id - The id of the activity, must be only digits
+ * @param {Number} id - The id of the activity, must be only hexidecimal
  */
 activity.route('/:id([a-f0-9]+)')
   .get(async(req, res) => {
