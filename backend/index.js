@@ -14,7 +14,7 @@ const app = express();
 /* Parses JSON formatted request bodies */
 app.use(express.json());
 /* Parses requests with url-encoded values */
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: false}));
 
 app.use('/api', api);
 
