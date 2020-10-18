@@ -12,15 +12,19 @@ activity.route('/create')
   .post(async(req, res) => {
     const statusCode = 200;
 	const currentDate = Date.now();
-	const activity = new Activity({
+	const activitydata = new Activity({
 		title: req.body.title,
 		description: req.body.description,
 		creationDateTime: currentDate,
 		lastEditDateTime: currentDate,
 	})
-	await activity.save()
-	//res.redirect('/activity/edit/#');
-    res.status(statusCode).send(activity);
+	try {
+		await activitydata.save();
+		//res.redirect('/activity/edit/#');
+		res.status(statusCode).send(activitydata);
+	} catch(error) {
+		res.status(500).send(error);
+	}
   });
   
 /**
@@ -48,11 +52,13 @@ activity.route('/search')
 	if (Boolean(req.body.numPosts)) {
 		numPosts = req.body.numPosts;
 	}
-	let getobj = await Activity.find( {creationDateTime: {$exists: true}} ).sort({creationDateTime : -1}).limit(numPosts);
-	
-    const statusCode = 200;
-	
-    res.status(statusCode).send(getobj);
+	try {
+		let getobj = await Activity.find( {creationDateTime: {$exists: true}} ).sort({creationDateTime : -1}).limit(numPosts);
+		const statusCode = 200;
+		res.status(statusCode).send(getobj);
+	} catch(error) {
+		res.status(500).send(error);
+	}
   });
 
 /**
@@ -62,12 +68,14 @@ activity.route('/search')
  */
 activity.route('/:id([a-f0-9]+)')
   .get(async(req, res) => {
-	let getobj = await Activity.findById(req.params.id).exec();
-	
-    const statusCode = 200;
-	const shortened = Boolean(req.query.shortened);
-	
-    res.status(statusCode).send(getobj);
+	try {
+		let getobj = await Activity.findById(req.params.id).exec();
+		const statusCode = 200;
+		const shortened = Boolean(req.query.shortened);
+		res.status(statusCode).send(getobj);
+	} catch(error) {
+		res.status(500).send(error);
+	}
   });
 
 module.exports = activity;
