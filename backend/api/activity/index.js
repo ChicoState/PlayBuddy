@@ -77,10 +77,7 @@ activity.route('/create')
  */
 activity.route('/search')
   .get(async(req, res) => {
-	numPosts = 20;
-	if (Boolean(req.body.numPosts)) {
-		numPosts = req.body.numPosts;
-	}
+	numPosts = req.body.numPosts || 20;
 	try {
 		let getobj = await Activity.find( {creationDateTime: {$exists: true}} ).sort({creationDateTime : -1}).limit(numPosts);
 		const statusCode = 200;
