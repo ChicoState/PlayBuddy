@@ -1,7 +1,12 @@
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 const express = require('express');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
 const api = require('./api');
 const database = require('./database');
+const User = require('./database/models/user');
 
 /* Application Variables */
 const port = process.env.EXPRESS_PORT || 3001;
@@ -14,7 +19,17 @@ const app = express();
 /* Parses JSON formatted request bodies */
 app.use(express.json());
 /* Parses requests with url-encoded values */
-app.use(express.urlencoded({ extended: false}));
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser('appSecret'));
+app.use(session());
+
+/* Use Passport for Authentication */
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 app.use('/api', api);
 
@@ -30,6 +45,7 @@ database.on('reconnectFailed', () => {
  * even after successful reconnects
  */
 database.once('connected', () => {
+  console.log('Database connected, starting Express');
   // Starts the Express server
   app.listen(port, () => {
     console.log(`Express API server started on port ${port}`);
