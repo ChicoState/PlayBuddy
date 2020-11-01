@@ -5,6 +5,8 @@ const activitySchema = new mongoose.Schema({
   description: String,
   creationDateTime: Date,
   lastEditDateTime: Date,
+  startDateTime: Date,
+  endDateTime: Date,
   location: {
     latitude: Number,
     longitude: Number,
@@ -17,6 +19,7 @@ const activitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment',
   }],
+  deleted: Number,
 });
 
 const Activity = mongoose.model('Activity', activitySchema);
