@@ -1,7 +1,27 @@
 const express = require('express');
 const Activity = require('../../database/models/activity');
+const User = require('../../database/models/user');
 
 const activity = express.Router();
+
+/**
+ * Finds a User by ID and returns a formatted object, removing sensitive info
+ * @param {String | ObjectID} id - The id of the User
+ */
+async function getUserDataById(id) {
+  try {
+    const user = await User.findById(id).exec();
+    return {
+      username: user.username,
+      fullname: user.fullname,
+      // eslint-disable-next-line no-underscore-dangle
+      _id: user._id,
+    };
+  } catch (error) {
+    console.log(`Unable to fetch User from database with id: ${id}`);
+    return {};
+  }
+}
 
 /**
  * Creates a new activity and returns its data
@@ -49,7 +69,14 @@ activity.route('/create')
     }
 
     // Response
-    return res.status(200).json({ activity: activitydata });
+    return res.status(200).json({
+      activity: activitydata,
+      author: {
+        username: req.user.username,
+        fullname: req.user.fullname,
+        _id: req.user.id,
+      },
+    });
   });
 
 /**
@@ -84,7 +111,7 @@ activity.route('/edit/:id([a-f0-9]+)')
     }
 
     // Ensure the authenticated user is author of this activity
-    if (getobj.postedBy !== req.user.id) {
+    if (getobj.postedBy.toString() !== req.user.id) {
       return res.status(403).json({
         error: 'Wrong account',
       });
@@ -118,6 +145,11 @@ activity.route('/edit/:id([a-f0-9]+)')
     // Response
     return res.status(200).json({
       activity: getobj,
+      author: {
+        username: req.user.username,
+        fullname: req.user.fullname,
+        _id: req.user.id,
+      },
       shortened,
     });
   });
@@ -153,7 +185,7 @@ activity.route('/delete/:id([a-f0-9]+)')
     }
 
     // Ensure the authenticated user is author of this activity
-    if (getobj.postedBy !== req.user.id) {
+    if (getobj.postedBy.toString() !== req.user.id) {
       return res.status(403).json({
         error: 'Wrong account',
       });
@@ -206,7 +238,7 @@ activity.route('/restore/:id([a-f0-9]+)')
     }
 
     // Ensure the authenticated user is author of this activity
-    if (getobj.postedBy !== req.user.id) {
+    if (getobj.postedBy.toString() !== req.user.id) {
       return res.status(403).json({
         error: 'Wrong account',
       });
@@ -301,21 +333,36 @@ activity.route('/search')
     // Filter out activities marked as deleted
     filterSettings.deleted = { $ne: 1 };
 
+    let getobjs;
     // Perform the search
     try {
-      const getobj = await Activity
+      // The collection of found activities
+      getobjs = await Activity
         .find(filterSettings)
         .sort(sortSettings)
         .skip(pageSize * (page - 1))
         .limit(pageSize);
-      return res.status(200).json({
-        activity: getobj,
-      });
     } catch (error) {
       return res.status(500).json({
         error: 'Error retrieving from database',
       });
     }
+
+    // Collect every author, and create a list of { activity, author } objects
+    // Results is a list of promises at first so we must wait until they resolve
+    const results = getobjs.map(async (doc) => {
+      const author = await getUserDataById(doc.postedBy);
+      return {
+        activity: doc,
+        author,
+      };
+    });
+
+    // Wait for all promises, then send response
+    return Promise.all(results)
+      .then((activities) => res.status(200).json({
+        results: activities,
+      }));
   });
 
 /**
@@ -356,6 +403,7 @@ activity.route('/:id([a-f0-9]+)')
     // Response
     return res.status(200).json({
       activity: getobj,
+      author: await getUserDataById(activity.postedBy),
       shortened,
     });
   });
