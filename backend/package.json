@@ -4,7 +4,8 @@
   "description": "A web application for finding on-going, or soon-to-start group activities in your local area",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
