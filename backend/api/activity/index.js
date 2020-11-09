@@ -364,3 +364,83 @@ activity.route('/:id([a-f0-9]+)')
   });
 
 module.exports = activity;
+activity.route('/filter')
+  .post(async (req, res) => {
+    const currentDateTime = Date.now();
+    //Default variables for search
+    const page = req.body.page || 1;
+    const pageSize = req.body.pageSize || 20;
+    const sort = req.body.sort || 0;
+    const reverse = Boolean(req.body.reverse);
+    const omitEnded = req.body.omitEnded|| currentDateTime;
+    const omitStarted = req.body.omitStarted || currentDateTime;
+    
+    //Handle reversed data
+    var rev = 1;
+    if (reverse) {
+        rev = -1;
+    }
+    
+    //Limit allowed search size
+    if (pageSize > 1000) {
+        return res.status(400).json({
+          error: 'pageSize is too large. Maximum is 1000',
+        });
+    }
+    if (pageSize < 1) {
+        return res.status(400).json({
+          error: 'pageSize must be 1 or greater',
+        });
+    }
+    
+    //Limit page number
+    if (page < 1) {
+        return res.status(400).json({
+          error: 'page must be 1 or greater',
+        });
+    }
+    
+    //Add filter and sort settings to the database query
+    var filterSettings = {}
+    var sortSettings = {}
+    //Sorting methods
+    if (sort == 0) {
+        sortSettings = { startDateTime: (1*rev), _id: (1*rev) }
+    }
+    else if (sort == 1) {
+        sortSettings = { creationDateTime: (-1*rev), _id: (1*rev) }
+    }
+    else {
+      return res.status(400).json({
+        error: 'Invalid sort method',
+      });
+    }
+    //Filter ended activities
+    if (typeof(omitEnded) != "undefined") {
+        filterSettings.endDateTime = { $gt: omitEnded }
+    }
+    //Filter started activities
+    if (typeof(omitStarted) != "undefined") {
+        filterSettings.startDateTime = { $gt: omitStarted }
+    }
+    //Filter out activites marked as deleted
+    filterSettings.deleted = { $ne: 1 }
+    
+    //Perform the search
+    try {
+      const getobj = await Activity
+      .find(filterSettings)
+      .sort(sortSettings)
+      .skip(pageSize * (page-1))
+      .limit(pageSize);
+      res.status(200).json({
+        activity: getobj,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        error: 'Error retrieving from database',
+      });
+    }
+  });
+
+module.exports = activity;
