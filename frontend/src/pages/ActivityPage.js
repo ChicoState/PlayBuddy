@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Card from '@material-ui/core/Card';
+import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+
 import {
   Avatar,
   CardContent,
@@ -12,6 +15,7 @@ import {
   ListItemText,
   Paper,
   Typography,
+  Button
 } from '@material-ui/core';
 
 const fakeActivityData = {
@@ -38,6 +42,19 @@ const fakeCommentData = [
   },
 ];
 
+const useStyles = makeStyles((theme) => ({
+  container: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  textField: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    marginBottom: theme.spacing(2),
+    width: '90%',
+  },
+}));
+
 const ActivityPage = ({ id }) => {
   // this gets and sets state for activity data, comes from post id
   const [activityData, setActivityData] = useState(fakeActivityData);
@@ -49,9 +66,78 @@ const ActivityPage = ({ id }) => {
   });
   // this gets and sets the comment data
   const [comments, setComments] = useState(fakeCommentData);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const classes = useStyles();
+  const filter = async () => {
+    let sendData = {
+      omitEnded: endDate,
+      omitStarted: startDate
+    }
+    console.log(sendData);
+    let apiUrl = "http://127.0.0.1:4000/api/activity/filter"
+    const options = {
+      method: "post",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://127.0.0.1:4000",
+      },
+      body: JSON.stringify(sendData)
+    };
 
+    await fetch(apiUrl, options)
+    .then((res) => res.json())
+    .then(
+      (result) => {
+        console.log('result', result);
+        return result;
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  }
   return (
     <Container>
+      <Card style={{paddingTop: 20, paddingBottom: 20, marginTop: 10}}>
+        <form className={classes.container} noValidate >
+          <TextField
+            id="datetime-local"
+            label="Start Date Time"
+            type="datetime-local"
+            defaultValue="2017-05-24T10:30"
+            className={classes.textField}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            onChange={(val) => {
+              setStartDate(val.target.value);
+              console.log('val', val.target.value);
+            }}
+          />
+          <br />
+          <TextField
+            id="datetime-local"
+            label="End Date Time"
+            type="datetime-local"
+            defaultValue="2017-05-24T10:30"
+            className={classes.textField}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            onChange={(val) => {
+              setEndDate(val.target.value);
+              console.log('val', val.target.value);
+            }}
+          />
+
+          <Button variant="contained" color="primary" style={{alignSelf: "center"}} onClick={()=>filter()}>
+            Filter
+          </Button>
+        </form>
+      </Card>
+      <br />
       <Card>
         <CardHeader>
           {id}
@@ -95,7 +181,7 @@ const ActivityPage = ({ id }) => {
               </ListItemText>
             </ListItem>
           ))}
-        </List> 
+        </List>
       </Paper>
     </Container>
 
