@@ -86,6 +86,12 @@ users.get('/:username([a-zA-Z0-9]+)', async (req, res) => {
 /**
  * Edits a user if the requestor is the requested user
  * @param {Hex} id - The id of the user
+ * @body {String} username
+ * @body {String} password
+ * @body {Object} fullname - The first and last names to update
+ *  @body {String} fullname.firstName
+ *  @body {String} fullname.lastName
+ * @body {String} primaryEmail
  */
 users.post('/edit/:id([a-f0-9]+)', async (req, res) => {
   // Not authenticated
