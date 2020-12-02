@@ -2,16 +2,19 @@ import React from 'react';
 import { Switch, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import ActivityPage from './pages/ActivityPage';
+import ActivityListPage from './pages/ActivityListPage';
 
 const Main = () => (
   <Switch>
     <Route exact path="/">
-      <Home/>
+      <Home />
     </Route>
-    <Route 
-      path="/activity/:id"
-      children={({match}) => (<ActivityPage id={match.params.id}/>)}
-    />
+    <Route path="/activityList">
+      <ActivityListPage />
+    </Route>
+    <Route path="/activity">
+      <ActivityPage id={420} />
+    </Route>
   </Switch>
 );
 
