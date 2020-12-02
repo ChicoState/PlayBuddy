@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const mongoDatabaseName = process.env.MONGO_DATABASE_NAME || 'playbuddy';
 const mongoHostName = process.env.MONGO_HOST_NAME || 'localhost';
-const mongoURL = `mongodb://${mongoHostName}/${mongoDatabaseName}`;
+const mongoURL = process.env.MONGO_FULL_URL || `mongodb://${mongoHostName}/${mongoDatabaseName}`;
 
 // Connect to the MongoDB server
 mongoose.connect(mongoURL, {
