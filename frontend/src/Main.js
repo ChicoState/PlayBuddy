@@ -8,9 +8,10 @@ const Main = () => (
     <Route exact path="/">
       <Home/>
     </Route>
-    <Route path="/activity">
-      <ActivityPage id={420}/>
-    </Route>
+    <Route 
+      path="/activity/:id"
+      children={({match}) => (<ActivityPage id={match.params.id}/>)}
+    />
   </Switch>
 );
 

@@ -1,6 +1,7 @@
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const express = require('express');
+const cors = require('cors');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const session = require('express-session');
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(express.json());
 /* Parses requests with url-encoded values */
 app.use(express.urlencoded({ extended: false }));
+app.use(cors());
 app.use(cookieParser('appSecret'));
 app.use(session());
 

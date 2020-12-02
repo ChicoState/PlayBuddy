@@ -399,11 +399,10 @@ activity.route('/:id([a-f0-9]+)')
 
     // Check if shortened data should be returned
     const shortened = Boolean(req.query.shortened);
-
     // Response
     return res.status(200).json({
       activity: getobj,
-      author: await getUserDataById(activity.postedBy),
+      author: await getUserDataById(getobj.postedBy),
       shortened,
     });
   });
