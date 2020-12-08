@@ -8,6 +8,7 @@ const users = express.Router();
  * If the user requested is the requesting user, send all data
  * @param {Hex} id - The user's id
  */
+//TODO: Change this path so that the "find user by username" path won't match to this if the username only has 0-9 and a-f
 users.get('/:id([a-f0-9]+)', async (req, res) => {
   let foundUser;
 
