@@ -1,9 +1,13 @@
 var request = require('supertest');
 var server = require('../index');
 var agent = request.agent('localhost:3001');
+var database = require('../database');
 
 //Globals that keep track of database item id's
 let post1_id;
+
+//Drop the database so we start with a clean slate
+database.dropDatabase();
 
 describe('Sessions', function() {
 	it('Nonexistent route', function(done) {
@@ -158,6 +162,68 @@ describe('Sessions', function() {
 		.end(function(err, res) {
 			expect(res.status).toEqual(404);
 			expect(res.body.error).toEqual('Not found');
+			done();
+		});
+	});
+	it('Simple search', function(done) {
+		agent.get('/api/activity/search')
+		.send({})
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results.length).toEqual(2);
+			done();
+		});
+	});
+	it('Create activity with dates; ongoing', function(done) {
+		agent.post('/api/activity/create')
+		.send({ title: 'testtitle', description: 'testdescription', startDateTime: 1})
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.activity.title).toEqual('testtitle');
+			expect(res.body.activity.description).toEqual('testdescription');
+			let startDateTime = new Date(res.body.activity.startDateTime);
+			expect(startDateTime.getTime()).toEqual(1);
+			done();
+		});
+	});
+	it('Create activity with dates; ended', function(done) {
+		agent.post('/api/activity/create')
+		.send({ title: 'testtitle', description: 'testdescription', startDateTime: 1, endDateTime: 2})
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.activity.title).toEqual('testtitle');
+			expect(res.body.activity.description).toEqual('testdescription');
+			let startDateTime = new Date(res.body.activity.startDateTime);
+			let endDateTime = new Date(res.body.activity.endDateTime);
+			expect(startDateTime.getTime()).toEqual(1);
+			expect(endDateTime.getTime()).toEqual(2);
+			done();
+		});
+	});
+	it('Create activity with invalid dates', function(done) {
+		agent.post('/api/activity/create')
+		.send({ title: 'testtitle', description: 'testdescription', startDateTime: 3, endDateTime: 2 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(400);
+			expect(res.body.error).toEqual('endDateTime is less than startDateTime');
+			done();
+		});
+	});
+	it('Search omit ended', function(done) {
+		agent.get('/api/activity/search')
+		.send({ omitEnded:true })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results.length).toEqual(3);
+			done();
+		});
+	});
+	it('Search omit started', function(done) {
+		agent.get('/api/activity/search')
+		.send({ omitStarted:true })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results.length).toEqual(2);
 			done();
 		});
 	});
