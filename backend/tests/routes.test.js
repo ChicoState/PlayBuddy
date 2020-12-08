@@ -11,7 +11,23 @@ database.dropDatabase();
 
 describe('Sessions', function() {
 	it('Nonexistent route', function(done) {
-		agent.get('/api/activity/void' + post1_id)
+		agent.get('/api/activity/void')
+		.send({})
+		.end(function(err, res) {
+			expect(res.status).toEqual(404);
+			done();
+		});
+	});
+	it('Route with wrong type of request 1', function(done) {
+		agent.get('/api/activity/create')
+		.send({})
+		.end(function(err, res) {
+			expect(res.status).toEqual(404);
+			done();
+		});
+	});
+	it('Route with wrong type of request 2', function(done) {
+		agent.post('/api/activity/search')
 		.send({})
 		.end(function(err, res) {
 			expect(res.status).toEqual(404);
@@ -176,22 +192,22 @@ describe('Sessions', function() {
 	});
 	it('Create activity with dates; ongoing', function(done) {
 		agent.post('/api/activity/create')
-		.send({ title: 'testtitle', description: 'testdescription', startDateTime: 1})
+		.send({ title: 'ongoing', description: 'testdescription', startDateTime: 5})
 		.end(function(err, res) {
 			expect(res.status).toEqual(200);
-			expect(res.body.activity.title).toEqual('testtitle');
+			expect(res.body.activity.title).toEqual('ongoing');
 			expect(res.body.activity.description).toEqual('testdescription');
 			let startDateTime = new Date(res.body.activity.startDateTime);
-			expect(startDateTime.getTime()).toEqual(1);
+			expect(startDateTime.getTime()).toEqual(5);
 			done();
 		});
 	});
 	it('Create activity with dates; ended', function(done) {
 		agent.post('/api/activity/create')
-		.send({ title: 'testtitle', description: 'testdescription', startDateTime: 1, endDateTime: 2})
+		.send({ title: 'ended', description: 'testdescription', startDateTime: 1, endDateTime: 2})
 		.end(function(err, res) {
 			expect(res.status).toEqual(200);
-			expect(res.body.activity.title).toEqual('testtitle');
+			expect(res.body.activity.title).toEqual('ended');
 			expect(res.body.activity.description).toEqual('testdescription');
 			let startDateTime = new Date(res.body.activity.startDateTime);
 			let endDateTime = new Date(res.body.activity.endDateTime);
@@ -227,6 +243,102 @@ describe('Sessions', function() {
 			done();
 		});
 	});
+	it('Search sort by date created', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:1 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('ended');
+			expect(res.body.results[1].activity.title).toEqual('ongoing');
+			expect(res.body.results[2].activity.title).toEqual('Unnamed activity');
+			expect(res.body.results[3].activity.title).toEqual('newtitle');
+			done();
+		});
+	});
+	it('Search reversed sort by date created', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:1 , reverse:1 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('newtitle');
+			expect(res.body.results[1].activity.title).toEqual('Unnamed activity');
+			expect(res.body.results[2].activity.title).toEqual('ongoing');
+			expect(res.body.results[3].activity.title).toEqual('ended');
+			done();
+		});
+	});
+	it('Search sort by start time', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('ended');
+			expect(res.body.results[1].activity.title).toEqual('ongoing');
+			expect(res.body.results[2].activity.title).toEqual('newtitle');
+			expect(res.body.results[3].activity.title).toEqual('Unnamed activity');
+			done();
+		});
+	});
+	it('Search invalid sort', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:-6 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(400);
+			expect(res.body.error).toEqual('Invalid sort method');
+			done();
+		});
+	});
+	it('Search pagination, page 1', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0, page:1, pageSize:2 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('ended');
+			expect(res.body.results[1].activity.title).toEqual('ongoing');
+			expect(res.body.results.length).toEqual(2);
+			done();
+		});
+	});
+	it('Search pagination, page 2', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0, page:2, pageSize:2 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('newtitle');
+			expect(res.body.results[1].activity.title).toEqual('Unnamed activity');
+			expect(res.body.results.length).toEqual(2);
+			done();
+		});
+	});
+	it('Search pagination, out of pages', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0, page:2, pageSize:3 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(200);
+			expect(res.body.results[0].activity.title).toEqual('Unnamed activity');
+			expect(res.body.results.length).toEqual(1);
+			done();
+		});
+	});
+	it('Search pagination, invalid page', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0, page:-1, pageSize:3 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(400);
+			expect(res.body.error).toEqual('page must be 1 or greater');
+			done();
+		});
+	});
+	it('Search pagination, invalid pageSize', function(done) {
+		agent.get('/api/activity/search')
+		.send({ sort:0, page:1, pageSize:-1 })
+		.end(function(err, res) {
+			expect(res.status).toEqual(400);
+			expect(res.body.error).toEqual('pageSize must be 1 or greater');
+			done();
+		});
+	});
+	
 });
 
 
