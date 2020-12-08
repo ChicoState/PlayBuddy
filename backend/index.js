@@ -8,7 +8,6 @@ const session = require('express-session');
 const api = require('./api');
 const database = require('./database');
 const User = require('./database/models/user');
-const cors = require('cors');
 /* Application Variables */
 const port = process.env.EXPRESS_PORT || 3001;
 
