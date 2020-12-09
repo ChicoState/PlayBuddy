@@ -28,7 +28,9 @@ afterAll(async () => {
 });
 
 // Wait for the server to startup
-beforeAll(() => new Promise((resolve) => setTimeout(resolve, 10000)))
+beforeAll((done) => {
+  setTimeout(done, 5000);
+})
 
 describe('Sessions', () => {
   it('Nonexistent route', (done) => {
