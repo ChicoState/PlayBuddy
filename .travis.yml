@@ -13,5 +13,5 @@ before_script:
   - npm install
 
 script:
-  - sleep 15
+  - sleep 60
   - npm test
