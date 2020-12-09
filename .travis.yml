@@ -10,7 +10,7 @@ node_js:
 before_script:
   - cd ./backend
   - sudo docker run --rm -p 27017:27017 -d mongo
-  - npm ci
+  - npm install
 
 script:
   - npm run test
