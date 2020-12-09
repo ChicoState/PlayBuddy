@@ -28,14 +28,6 @@ afterAll(async () => {
 });
 
 describe('Sessions', () => {
-  it('Nonexistent route', (done) => {
-    agent.get('/api/activity/void')
-      .send({})
-      .end((err, res) => {
-        expect(res.status).toEqual(404);
-        done();
-      });
-  });
   it('Route with wrong type of request 1', (done) => {
     agent.get('/api/activity/create')
       .send({})
