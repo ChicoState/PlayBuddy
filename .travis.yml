@@ -1,4 +1,8 @@
 language: node_js
+
+services:
+  - docker
+
 node_js:
   - "lts/*"
 cache:
@@ -21,3 +25,10 @@ jobs:
           - npm ci
         script:
           - npm run lint
+    - stage: Test backend
+      install: 
+        - cd ./backend
+        - docker run --rm -p 27017:27017 -d mongo
+        - npm ci
+      script:
+        - npm run test
