@@ -36,6 +36,7 @@ describe('Sessions', () => {
           console.log(err);
           done();
         }
+        console.log(JSON.stringify(res));
         expect(res.status).toEqual(404);
         done();
       });
