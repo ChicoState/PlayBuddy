@@ -37,11 +37,6 @@ describe('Sessions', () => {
     agent.get('/api/activity/void')
       .send({})
       .end((err, res) => {
-        if (err) {
-          console.log(err);
-          done();
-        }
-        console.log(JSON.stringify(res));
         expect(res.status).toEqual(404);
         done();
       });
