@@ -33,7 +33,7 @@ describe('Sessions', () => {
       .send({})
       .end((err, res) => {
         if (err) {
-          console.log(error);
+          console.log(err);
           done();
         }
         expect(res.status).toEqual(404);
