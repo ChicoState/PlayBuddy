@@ -1,6 +1,6 @@
 # Playbuddy
 
-[![Build Status](https://travis-ci.org/ChicoState/PlayBuddy.svg?branch=development)](https://travis-ci.org/ChicoState/PlayBuddy)
+[![Build Status](https://travis-ci.com/ChicoState/PlayBuddy.svg?branch=development)](https://travis-ci.com/ChicoState/PlayBuddy)
 
 A web application for finding on-going, or soon-to-start group
 activities in your local area.
