@@ -2,15 +2,18 @@ import React from 'react';
 import {
   AppBar,
   IconButton,
+  Link,
   makeStyles,
   Toolbar,
-  Typography,
 } from '@material-ui/core';
 import { AccountCircle, Menu } from '@material-ui/icons';
+import { Link as RouterLink } from 'react-router-dom';
 
 const useStyles = makeStyles(() => ({
   title: {
     flexGrow: 1,
+    color: 'white',
+    fontWeight: 'bold',
   },
 }));
 
@@ -22,9 +25,15 @@ const Header = () => {
         <IconButton edge="start" color="inherit" aria-label="menu">
           <Menu />
         </IconButton>
-        <Typography variant="h6" className={classes.title}>
+        <Link
+          component={RouterLink}
+          to="/"
+          variant="h5"
+          className={classes.title}
+          underline="none"
+        >
           PlayBuddy
-        </Typography>
+        </Link>
         <IconButton>
           <AccountCircle />
         </IconButton>
