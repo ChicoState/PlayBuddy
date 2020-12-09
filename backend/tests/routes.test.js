@@ -32,6 +32,10 @@ describe('Sessions', () => {
     agent.get('/api/activity/void')
       .send({})
       .end((err, res) => {
+        if (err) {
+          console.log(error);
+          done();
+        }
         expect(res.status).toEqual(404);
         done();
       });
