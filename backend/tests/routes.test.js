@@ -27,6 +27,9 @@ afterAll(async () => {
   }
 });
 
+// Wait for the server to startup
+beforeAll(() => new Promise((resolve) => setTimeout(resolve, 10000)))
+
 describe('Sessions', () => {
   it('Nonexistent route', (done) => {
     agent.get('/api/activity/void')
