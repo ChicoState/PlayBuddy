@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { withStyles } from '@material-ui/styles'; 
+import React from 'react';
+import { withStyles } from '@material-ui/styles';
 import PropTypes from 'prop-types';
 import {
   Avatar,
-  Card,
-  CardContent,
-  CardHeader,
+  Box,
   CircularProgress,
   Container,
+  Divider,
   List,
   ListItem,
   ListItemAvatar,
@@ -16,19 +15,7 @@ import {
   Typography,
 } from '@material-ui/core';
 
-const api_url = 'http://localhost:3001/api';
-
-const fakeCommentData = [
-  {
-    comment: 'This will be an hour long introductory course.',
-    author: {
-      username: 'Jay',
-      fullname: 'Jay Gohner',
-      userId: 420,
-      avatarURL: 'https://bullmuaythaikrabi.com/wp-content/uploads/2017/09/Bull-Muay-Thai-Krabi-fighters-news_6.jpg'
-    },
-  },
-];
+const apiUrl = 'http://localhost:3001/api';
 
 const styles = () => ({
   Card: {
@@ -40,121 +27,153 @@ const styles = () => ({
 class ActivityPage extends React.Component {
   // Constructor
   constructor(props) {
-    super(props);
+    super();
     this.state = {
       activityData: null,
       loadingData: {
         finished: false,
         error: false,
       },
-      commentData: fakeCommentData,
       id: props.id,
       authorData: null,
-      classes: this.props.classes, 
-    }
+    };
   }
 
   componentDidMount() {
-    fetch(`${api_url}/activity/${this.state.id}`, {
-      //mode: 'same-origin',
-    })
-      .then(res => {
-        console.log(res);
-        return res.json()
-      })
+    const { id } = this.state;
+    fetch(`${apiUrl}/activity/${id}`)
+      .then((res) => res.json())
       .then(
         (result) => {
-          console.log(result)
           this.setState({
             activityData: result.activity,
-            loadingData: {finished: true},
+            loadingData: { finished: true },
             authorData: result.author,
           });
         },
         (error) => {
-          console.log(error);
           this.setState({
             loadingData: {
               finished: false,
-              error
-            }
+              error,
+            },
           });
-        }
+        },
       )
+      .catch((error) => {
+        this.setState({
+          loadingData: {
+            finished: false,
+            error,
+          },
+        });
+      });
   }
 
   render() {
     const {
       activityData,
-      commentData,
       loadingData,
       authorData: author,
-      classes,
-    }=this.state;
+    } = this.state;
+
+    // Check if there was an error getting data
     if (loadingData.error) {
-      return <div> Error</div>;
+      return <div>Error</div>;
     }
-    else if(!loadingData.finished) {
-      return <CircularProgress/>;
+    // Check if we're not done loading
+    if (!loadingData.finished) {
+      return <CircularProgress />;
     }
-    else {
-      let usersfullName = '';
-      if(author.fullname && author.fullname.firstName && author.fullname.lastName) {
-        usersfullName = `${author.fullname.firstName} ${author.fullname.lastName}`;
+
+    // Create a string with the user's full name
+    let usersFullName = '';
+    if (author.fullname && author.fullname.firstName && author.fullname.lastName) {
+      usersFullName = `${author.fullname.firstName} ${author.fullname.lastName}`;
+    }
+
+    // Format date range string for event length
+    let startDate;
+    let endDate;
+    let dateRange;
+    if (activityData.startDateTime) {
+      startDate = (new Date(activityData.startDateTime)).toLocaleDateString();
+      dateRange = startDate;
+      if (activityData.endDateTime) {
+        endDate = (new Date(activityData.endDateTime)).toLocaleDateString();
+        dateRange = `${startDate} - ${endDate}`;
       }
-      return (
+    }
+
+    return (
       <Container>
-        <Card className={classes.Card}>
-          <CardHeader
-            avatar={(
-              <Avatar
-                //these postedBy's need to be changed
-                alt={`${author.username}'s profile picture`}
-                src={author.image}
-              >
-                {author.username ? author.username[0] : ''}
-              </Avatar>
-            )}
-            title={author.username}
-            subheader={usersfullName}
-          >
-          </CardHeader>
-          <CardContent>
-            <Typography variant="h3" color="textSecondary">
-              {activityData.title}
-          </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {activityData.description}
-          </Typography>
-          </CardContent>
-        </Card>
         <Paper>
-          <List>
-            {commentData.map((comment) => (
-              <ListItem key={comment.postedBy}>
-                <ListItemAvatar>
-                  <Avatar
-                    alt={`${comment.postedBy}'s profile picture`}
-                    src={comment.postedBy}
-                  >
-                    {comment.postedBy}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText>
-                  {comment.comment}
-                </ListItemText>
-              </ListItem>
-            ))}
-          </List>
+          <Box my={2} p={2}>
+            <Box mb={1}>
+              <Box display="flex" flexWrap="wrap" style={{ alignItems: 'flex-end' }}>
+                <Typography variant="h3" style={{ marginRight: 8 }}>
+                  {activityData.title}
+                </Typography>
+                <Typography>
+                  By
+                  {' '}
+                  {usersFullName || author.username}
+                </Typography>
+              </Box>
+              {dateRange && (
+                <Typography variant="body1">{dateRange}</Typography>
+              )}
+            </Box>
+            <Box my={2} mx={2}>
+              <Typography variant="body2">
+                {activityData.description}
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+
+        <Paper>
+          <Container>
+            <Box py={2}>
+              <Box mb={1}>
+                <Typography variant="h4">Comments</Typography>
+              </Box>
+              <Divider />
+              <List>
+                {
+                  // Check if there are comments
+                  activityData.comments.length > 0
+                    ? activityData.comments.map((comment) => (
+                      <ListItem key={comment.id}>
+                        <ListItemAvatar>
+                          <Avatar
+                            alt={`${comment.author.username}'s profile picture`}
+                          >
+                            {comment.author.username}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText>
+                          {comment.comment}
+                        </ListItemText>
+                      </ListItem>
+                    ))
+                    : (
+                      <Box>
+                        <Typography>
+                          It&apos;s quiet around here... Check back later.
+                        </Typography>
+                      </Box>
+                    )
+                }
+              </List>
+            </Box>
+          </Container>
         </Paper>
       </Container>
 
     );
-    }
-    
   }
-
-};
+}
 
 ActivityPage.propTypes = {
   id: PropTypes.string.isRequired,

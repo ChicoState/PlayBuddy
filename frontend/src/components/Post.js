@@ -1,26 +1,33 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardMedia from '@material-ui/core/CardMedia';
-import CardContent from '@material-ui/core/CardContent';
-import CardActions from '@material-ui/core/CardActions';
-import Avatar from '@material-ui/core/Avatar';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import { red } from '@material-ui/core/colors';
-import FavoriteIcon from '@material-ui/icons/Favorite';
-import ShareIcon from '@material-ui/icons/Share';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
+import {
+  Avatar,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  CardMedia,
+  IconButton,
+  Link,
+  Typography,
+} from '@material-ui/core';
+import {
+  Favorite as FavoriteIcon,
+  MoreVert as MoreVertIcon,
+  Share as ShareIcon,
+} from '@material-ui/icons';
+import { Link as RouterLink } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    maxWidth: 345,
+    marginTop: 16,
+    marginBottom: 16,
   },
   media: {
     height: 0,
     paddingTop: '56.25%', // 16:9
+    maxHeight: 500,
   },
   expand: {
     transform: 'rotate(0deg)',
@@ -32,21 +39,36 @@ const useStyles = makeStyles((theme) => ({
   expandOpen: {
     transform: 'rotate(180deg)',
   },
-  avatar: {
-    backgroundColor: red[500],
-  },
 }));
 
 const ActivitiesPost = ({
-  title, date, image, desc,
+  title,
+  date,
+  id,
+  image,
+  desc,
+  author,
 }) => {
   const classes = useStyles();
+
+  const localDate = new Date(date);
+  let subtitle = localDate.toLocaleDateString();
+  let name = '';
+
+  if (author) {
+    if (author.fullname && author.fullname.firstName && author.fullname.lastName) {
+      name = `${author.fullname.firstName} ${author.fullname.lastName}`;
+    } else {
+      name = author.username;
+    }
+    subtitle = `By ${name} starting on ${subtitle}`;
+  }
 
   return (
     <Card className={classes.root}>
       <CardHeader
         avatar={(
-          <Avatar aria-label="recipe" className={classes.avatar}>
+          <Avatar aria-label="author">
             R
           </Avatar>
         )}
@@ -55,8 +77,17 @@ const ActivitiesPost = ({
             <MoreVertIcon />
           </IconButton>
         )}
-        title={title}
-        subheader={date}
+        title={(
+          <Link
+            component={RouterLink}
+            to={`/activity/${id}`}
+            variant="h6"
+            color="textPrimary"
+          >
+            {title}
+          </Link>
+        )}
+        subheader={subtitle}
       />
       { image && (
       <CardMedia
@@ -65,11 +96,13 @@ const ActivitiesPost = ({
         title={image.title}
       />
       )}
-      <CardContent>
-        <Typography variant="body2" color="textSecondary" component="p">
-          {desc}
-        </Typography>
-      </CardContent>
+      {desc && (
+        <CardContent>
+          <Typography variant="body2" color="textSecondary" component="p">
+            {desc}
+          </Typography>
+        </CardContent>
+      )}
       <CardActions disableSpacing>
         <IconButton aria-label="add to favorites">
           <FavoriteIcon />
@@ -85,17 +118,25 @@ const ActivitiesPost = ({
 ActivitiesPost.propTypes = {
   title: PropTypes.string.isRequired,
   date: PropTypes.string.isRequired,
+  id: PropTypes.string.isRequired,
   image: PropTypes.shape({
     url: PropTypes.string.isRequired,
     title: PropTypes.string,
   }),
-  desc: PropTypes.string.isRequired,
+  desc: PropTypes.string,
+  author: PropTypes.shape({
+    username: PropTypes.string.isRequired,
+    fullname: PropTypes.shape({
+      firstName: PropTypes.string,
+      lastName: PropTypes.string,
+    }),
+  }),
 };
 
 ActivitiesPost.defaultProps = {
-  image: {
-    title: '',
-  },
+  image: undefined,
+  desc: undefined,
+  author: undefined,
 };
 
 export default ActivitiesPost;

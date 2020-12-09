@@ -1,41 +1,104 @@
-import React from 'react';
-import Container from '@material-ui/core/Container';
+/* eslint-disable no-underscore-dangle */
+import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  CircularProgress,
+  Container,
+  Fab,
+  makeStyles,
+  Typography,
+} from '@material-ui/core';
+import {
+  Add as AddIcon,
+} from '@material-ui/icons';
+import { Link } from 'react-router-dom';
 import Post from '../components/Post';
 
-const OurHome = () => (
-  <Container>
-    <h1>This is the Home Page</h1>
-    <Post
-      title="Disc Golf at DeLaveaga"
-      date="04/20/2021"
-      image={{
-        url: 'http://delaveagadiscgolf.com/wp-content/uploads/2011/07/15_Tee.jpg',
-        title: 'This is a photo of a spot on the course.',
-      }}
-      desc="Come down to Delaveaga for a great game of Disc Golf."
-    />
-    <Post
-      title="Muay Thai Session"
-      date="06/02/2021"
-      image={{
-        url: 'https://classpass-res.cloudinary.com/image/upload/f_auto,q_auto/a3pr36op4izqmtazy31g.png',
-        title: 'This is a photo of a muay thai session.',
-      }}
-      desc="Come by for an hour Muay Thai session!"
-    />
-    <Post
-      title="2 Man Pickup"
-      date="06/15/2021"
-      image={{
-        url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSoDUsrjS1YMSMz8mkrrZkp1j7YjvMhUsPscg&usqp=CAU',
-      }}
-      desc="A classic 2-man pickup game."
-    />
-    <Post
-      title="Kettlebell Run"
-      date="05/08/2021"
-    />
-  </Container>
-);
+const apiUrl = 'http://localhost:3001/api';
 
-export default OurHome;
+const useStyles = makeStyles((theme) => ({
+  fab: {
+    position: 'fixed',
+    bottom: theme.spacing(2),
+    right: theme.spacing(2),
+  },
+  extendedIcon: {
+    marginRight: theme.spacing(1),
+  },
+}));
+
+const Home = () => {
+  const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState('');
+
+  const classes = useStyles();
+
+  // The set of activities from /search
+  const [results, setResults] = useState([]);
+
+  // Function called only once on mount
+  useEffect(() => {
+    fetch(`${apiUrl}/activity/search`)
+      .then((res) => res.json())
+      .then((data) => {
+        setResults(data.results);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoadingError(error);
+        setLoading(false);
+      });
+  }, []);
+
+  const ErrorState = () => (
+    <Typography>Sorry, something went wrong. Try again in a few moments.</Typography>
+  );
+
+  const LoadingState = () => (
+    <Box m="auto">
+      <Typography>Loading latest activities, hang tight!</Typography>
+      <CircularProgress />
+    </Box>
+  );
+
+  const DisplayState = () => results.map((item) => (
+    <Post
+      key={`result-${item.activity._id}`}
+      title={item.activity.title}
+      desc={item.activity.description}
+      id={item.activity._id}
+      date={item.activity.startDateTime}
+      author={item.author}
+    />
+  ));
+
+  let CurrentState;
+
+  if (loadingError) {
+    CurrentState = ErrorState;
+  } else if (loading) {
+    CurrentState = LoadingState;
+  } else {
+    CurrentState = DisplayState;
+  }
+
+  return (
+    <Container style={{ marginTop: 16, marginBottom: 16 }}>
+      <Typography variant="h3">Recent Activities</Typography>
+      <CurrentState />
+      <Fab
+        color="primary"
+        aria-label="new activity"
+        className={classes.fab}
+        variant="extended"
+        component={Link}
+        to="/create"
+      >
+        <AddIcon className={classes.extendedIcon} />
+        Create
+      </Fab>
+    </Container>
+  );
+};
+
+export default Home;
