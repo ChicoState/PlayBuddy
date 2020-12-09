@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "eslint .",
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit",
     "test:watch": "jest --watch"
   },
   "repository": {

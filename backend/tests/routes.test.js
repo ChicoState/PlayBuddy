@@ -2,6 +2,7 @@ var request = require('supertest');
 var server = require('../index');
 var agent = request.agent('localhost:3001');
 var database = require('../database');
+var mongoose = require('mongoose');
 
 //Globals that keep track of database item id's
 let post1_id;
@@ -10,6 +11,19 @@ let user2_id;
 
 //Drop the database so we start with a clean slate
 database.dropDatabase();
+
+afterAll(async () => {
+	try {
+		// Connection to Mongo killed.
+		await mongoose.disconnect();
+	} catch (error) {
+		console.log(`
+			Error!
+			${error}
+		`);
+		throw error;
+	}
+});
 
 describe('Sessions', function() {
 	it('Nonexistent route', function(done) {
