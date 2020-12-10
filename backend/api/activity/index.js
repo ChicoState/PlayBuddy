@@ -1,7 +1,7 @@
 const express = require('express');
 const Activity = require('../../database/models/activity');
 const User = require('../../database/models/user');
-const ZipCode = require('../../database/models/zipcode');
+const ZipCode = require('../../database/models/zipCode');
 
 const activity = express.Router();
 
