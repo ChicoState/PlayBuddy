@@ -96,7 +96,7 @@ describe('Sessions', () => {
   });
   it('Create activity with dates; ongoing', (done) => {
     agent.post('/api/activity/create')
-      .send({ title: 'ongoing', description: 'testdescription', startDateTime: 5 })
+      .send({ title: 'ongoing', description: 'testdescription', startDateTime: 5, zipCode: 87110 })
       .end((err, res) => {
         expect(res.status).toEqual(200);
         expect(res.body.activity.title).toEqual('ongoing');
@@ -109,7 +109,7 @@ describe('Sessions', () => {
   it('Create activity with dates; ended', (done) => {
     agent.post('/api/activity/create')
       .send({
-        title: 'ended', description: 'testdescription', startDateTime: 1, endDateTime: 2,
+        title: 'ended', description: 'testdescription', startDateTime: 1, endDateTime: 2, zipCode: 89031
       })
       .end((err, res) => {
         expect(res.status).toEqual(200);
@@ -355,6 +355,42 @@ describe('Sessions', () => {
       .send({ sort: 0, page: 1, pageSize: -1 })
       .end((err, res) => {
         expect(res.status).toEqual(400);
+        done();
+      });
+  });
+  it('Filter by distance, invalid zip code', (done) => {
+    agent.get('/api/activity/search')
+      .send({ maxDistance:5, zipCode:-1 })
+      .end((err, res) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.results.length).toEqual(0);
+        done();
+      });
+  });
+  it('Filter by distance, short distance', (done) => {
+    agent.get('/api/activity/search')
+      .send({ maxDistance:1, zipCode:89104 })
+      .end((err, res) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.results.length).toEqual(0);
+        done();
+      });
+  });
+  it('Filter by distance, medium distance', (done) => {
+    agent.get('/api/activity/search')
+      .send({ maxDistance:50, zipCode:89104 })
+      .end((err, res) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.results.length).toEqual(1);
+        done();
+      });
+  });
+  it('Filter by distance, long distance', (done) => {
+    agent.get('/api/activity/search')
+      .send({ maxDistance:5000, zipCode:89104 })
+      .end((err, res) => {
+        expect(res.status).toEqual(200);
+        expect(res.body.results.length).toEqual(2);
         done();
       });
   });
