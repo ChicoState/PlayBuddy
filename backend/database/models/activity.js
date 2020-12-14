@@ -11,6 +11,7 @@ const activitySchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number,
   },
+  zipCode: Number,
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -1,6 +1,7 @@
 const express = require('express');
 const Activity = require('../../database/models/activity');
 const User = require('../../database/models/user');
+const ZipCode = require('../../database/models/zipCode');
 
 const activity = express.Router();
 
@@ -30,6 +31,7 @@ async function getUserDataById(id) {
  * @body {String} description - The title of the post
  * @body {Integer} startDateTime - The date/time the activity will start in milliseconds
  * @body {Integer} endDateTime - The date/time the activity will end in milliseconds
+ * @body {Integer} zipCode - The zip code of the activity, used for approximate distance checks
  */
 activity.route('/create')
   .post(async (req, res) => {
@@ -39,7 +41,7 @@ activity.route('/create')
         error: 'Not authenticated',
       });
     }
-
+    
     // Create the activity
     const currentDateTime = Date.now();
     const activitydata = new Activity({
@@ -47,6 +49,7 @@ activity.route('/create')
       description: req.body.description || 'No description offered',
       creationDateTime: currentDateTime,
       lastEditDateTime: currentDateTime,
+      zipCode: req.body.zipCode || -1,
       startDateTime: req.body.startDateTime || (currentDateTime + 86400000),
       endDateTime: req.body.endDateTime || (currentDateTime + 90000000),
       postedBy: req.user.id,
@@ -125,6 +128,7 @@ activity.route('/edit/:id([a-f0-9]+)')
     getobj.startDateTime = req.body.startDateTime || getobj.startDateTime;
     getobj.endDateTime = req.body.endDateTime || getobj.endDateTime;
     getobj.lastEditDateTime = currentDateTime;
+    getobj.zipCode = req.body.zipCode;
 
     // Ensure end time comes after start time
     if (getobj.endDateTime < getobj.startDateTime) {
@@ -268,6 +272,8 @@ activity.route('/restore/:id([a-f0-9]+)')
  * @body {Boolean} reverse - Reverses the order of the sort
  * @body {Boolean} omitEnded - Omits activities that have already ended. Defaults to false
  * @body {Boolean} omitStarted - Omits activities that have already started. Defaults to false
+ * @body {Boolean} maxDistance - Omits activities that are farther than this many miles away. Defaults to no limit
+ * @body {Boolean} zipCode - Used with maxDistance for determining the center of the search radius
  *
  * Sorting methods:
  * 0 - Start time, soonest first
@@ -283,6 +289,8 @@ activity.route('/search')
     const omitEnded = Boolean(req.body.omitEnded);
     const omitStarted = req.body.omitStarted || 0;
     const currentDateTime = Date.now();
+    const maxDistance = req.body.maxDistance || 0;
+    const zipCode = req.body.zipCode || -1;
 
     // Handle reversed data
     let rev = 1;
@@ -347,6 +355,42 @@ activity.route('/search')
         error: 'Error retrieving from database',
       });
     }
+    
+    // Post-search culling (these checks require more complex calculations)
+    // Distance checks
+    if (maxDistance > 0) {
+        for (let i = 0; i < getobjs.length; i ++) {
+            //Figure out the zip codes we're comparing
+            let zip1 = getobjs[i].zipCode;
+            let zip2 = req.body.zipCode;
+            let dist = 0;
+            
+            try {
+                //Find these zip codes in the database
+                let zip1Obj = await ZipCode.findOne({ zipCode:zip1 });
+                let zip2Obj = await ZipCode.findOne({ zipCode:zip2 });
+                
+                //Find their latitudes and longitudes
+                let lat1 = zip1Obj.Latitude;
+                let lon1 = zip1Obj.Longitude;
+                let lat2 = zip2Obj.Latitude;
+                let lon2 = zip2Obj.Longitude;
+                
+                //Calculate their distance from each other
+                //TODO: Convert all degrees to radians in the dataset to speed up these calculations
+                dist = 3958.8 * Math.acos(Math.sin(lat1/57.2958) * Math.sin(lat2/57.2958) + Math.cos(lat1/57.2958) * Math.cos(lat2/57.2958) *  Math.cos(lon2/57.2958 - lon1/57.2958))
+            } catch (error) {
+                //If a zip code is invalid, consider them to be an infinite distance from each other
+                dist = 999999999;
+            }
+            
+            //If the activity is too far away, remove it from results
+            if (dist > maxDistance) {
+                getobjs.splice(i,1);
+                i --;
+            }
+        }
+    }
 
     // Collect every author, and create a list of { activity, author } objects
     // Results is a list of promises at first so we must wait until they resolve
@@ -382,7 +426,7 @@ activity.route('/:id([a-f0-9]+)')
         error: 'Error retrieving from database',
       });
     }
-
+    
     // Ensure an actual object was found
     if (!getobj) {
       return res.status(404).json({
